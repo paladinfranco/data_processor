@@ -1,0 +1,22 @@
+# Entorno virtual de Python
+venv/
+.env
+
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Carpeta de salida (resultados generados)
+output/
+
+# Logs generados
+*.log
+
+# IDEs
+.vscode/
+.idea/
