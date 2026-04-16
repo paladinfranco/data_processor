@@ -20,3 +20,6 @@ output/
 # IDEs
 .vscode/
 .idea/
+
+# Logs generados
+logs/
