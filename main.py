@@ -102,9 +102,22 @@ def _modo_interactivo() -> dict:
             break
         print("   ⚠️  El valor no puede estar vacío.")
 
-    # Hilos
+    # Modo de ejecución (va ANTES que los hilos)
+    print("   1. hilos    → ThreadPoolExecutor  (recomendado para la mayoría de casos)")
+    print("   2. procesos → ProcessPoolExecutor (mejor para cálculos CPU-intensivos)")
     while True:
-        entrada_hilos = input("🧵 Número de hilos [default: 4]: ").strip()
+        modo = input("⚙️  Modo de ejecución (hilos / procesos) [default: hilos]: ").strip().lower()
+        if modo == "":
+            modo = "hilos"
+            break
+        if modo in {"hilos", "procesos"}:
+            break
+        print("   ⚠️  Opción inválida. Escribe 'hilos' o 'procesos'.")
+
+    # Hilos o procesos (la etiqueta cambia según el modo)
+    etiqueta_workers = "hilos" if modo == "hilos" else "procesos"
+    while True:
+        entrada_hilos = input(f"🧵 Número de {etiqueta_workers} [default: 4]: ").strip()
         if entrada_hilos == "":
             n_hilos = 4
             break
@@ -128,6 +141,7 @@ def _modo_interactivo() -> dict:
         "operador": operador,
         "valor":    valor,
         "n_hilos":  n_hilos,
+        "modo":     modo,
         "exportar": exportar,
     }
 
@@ -176,6 +190,7 @@ def _modo_cli(args: argparse.Namespace) -> dict:
         "operador": args.operador,
         "valor":    args.valor,
         "n_hilos":  args.hilos,
+        "modo":     args.modo,
         "exportar": args.exportar,
     }
 
@@ -200,25 +215,28 @@ def _ejecutar(config: dict) -> None:
 
     # 2. Procesamiento concurrente
     try:
-        resultado, tiempo = procesar(
+        resultado, tiempo, workers_reales = procesar(
             df,
             campo    = config["campo"],
             operador = config["operador"],
             valor    = config["valor"],
             n_hilos  = config["n_hilos"],
+            modo     = config["modo"],
         )
     except ValueError as e:
         logger.error(str(e))
         sys.exit(1)
 
     # 3. Mostrar resumen
+    tipo_worker = "Hilos utilizados  " if config["modo"] == "hilos" else "Procesos utilizados"
     logger.info("─" * 54)
     logger.info("📋 RESUMEN DE EJECUCIÓN")
     logger.info(f"   Archivo procesado : {config['archivo']}")
     logger.info(f"   Filtro aplicado   : {config['campo']} {config['operador']} {config['valor']}")
-    logger.info(f"   Hilos utilizados  : {config['n_hilos']}")
+    logger.info(f"   {tipo_worker}: {workers_reales}")
     logger.info(f"   Total procesados  : {len(df):,} registros")
     logger.info(f"   Total encontrados : {len(resultado):,} registros")
+    logger.info(f"   Modo de ejecución : {config['modo']}")
     logger.info(f"   Tiempo total      : {tiempo:.2f} segundos")
     logger.info("─" * 54)
 
@@ -243,12 +261,14 @@ def _parsear_argumentos() -> argparse.Namespace:
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
-    parser.add_argument("--archivo",   type=str,            help="Ruta al archivo CSV o XLSX")
-    parser.add_argument("--filtro",    type=str,            help="Campo a filtrar: cedula, telefono, saldo")
-    parser.add_argument("--operador",  type=str,            help="Operador: =, >, <, >=, <=")
-    parser.add_argument("--valor",     type=str,            help="Valor de referencia para el filtro")
-    parser.add_argument("--hilos",     type=int, default=4, help="Número de hilos (default: 4)")
-    parser.add_argument("--exportar",  action="store_true", help="Exportar resultados a CSV")
+    parser.add_argument("--archivo",  type=str,                             help="Ruta al archivo CSV o XLSX")
+    parser.add_argument("--filtro",   type=str,                             help="Campo a filtrar: cedula, telefono, saldo")
+    parser.add_argument("--operador", type=str,                             help="Operador: =, >, <, >=, <=")
+    parser.add_argument("--valor",    type=str,                             help="Valor de referencia para el filtro")
+    parser.add_argument("--modo",     type=str, default="hilos",
+                        choices=["hilos", "procesos"],                      help="Modo de ejecución: hilos o procesos (default: hilos)")
+    parser.add_argument("--hilos",    type=int, default=4,                  help="Número de hilos/procesos (default: 4)")
+    parser.add_argument("--exportar", action="store_true",                  help="Exportar resultados a CSV")
 
     return parser.parse_args()
 
