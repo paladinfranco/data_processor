@@ -18,6 +18,7 @@ from processor.orchestrator import procesar
 from processor.reader import leer_archivo
 from utils.exporter import exportar_csv
 from utils.logger import logger
+from utils.benchmark import ejecutar_benchmark
 
 
 # ── Banner ────────────────────────────────────────────────────────────────────
@@ -129,6 +130,10 @@ def _modo_interactivo() -> dict:
         except ValueError:
             print("   ⚠️  Ingresa un número entero mayor a 0.")
 
+    # Benchmark
+    bench_entrada = input("📊 ¿Ejecutar benchmark comparativo? (s/n) [default: n]: ").strip().lower()
+    benchmark = bench_entrada in {"s", "si", "sí", "y", "yes"}
+
     # Exportar
     exportar_entrada = input("💾 ¿Exportar resultados a CSV? (s/n) [default: n]: ").strip().lower()
     exportar = exportar_entrada in {"s", "si", "sí", "y", "yes"}
@@ -143,6 +148,7 @@ def _modo_interactivo() -> dict:
         "n_hilos":  n_hilos,
         "modo":     modo,
         "exportar": exportar,
+        "benchmark": benchmark,
     }
 
 
@@ -192,6 +198,7 @@ def _modo_cli(args: argparse.Namespace) -> dict:
         "n_hilos":  args.hilos,
         "modo":     args.modo,
         "exportar": args.exportar,
+        "benchmark": args.benchmark,
     }
 
 
@@ -251,6 +258,16 @@ def _ejecutar(config: dict) -> None:
     if config["exportar"]:
         exportar_csv(resultado, config["campo"], config["operador"], config["valor"])
 
+    # 6. Benchmark opcional
+    if config["benchmark"]:
+        ejecutar_benchmark(
+            df,
+            campo    = config["campo"],
+            operador = config["operador"],
+            valor    = config["valor"],
+            modo     = config["modo"],
+            archivo  = config["archivo"],
+        )
 
 # ── Argumentos CLI ────────────────────────────────────────────────────────────
 
@@ -269,6 +286,11 @@ def _parsear_argumentos() -> argparse.Namespace:
                         choices=["hilos", "procesos"],                      help="Modo de ejecución: hilos o procesos (default: hilos)")
     parser.add_argument("--hilos",    type=int, default=4,                  help="Número de hilos/procesos (default: 4)")
     parser.add_argument("--exportar", action="store_true",                  help="Exportar resultados a CSV")
+    parser.add_argument(
+        "--benchmark",
+        action="store_true",
+        help="Ejecuta benchmark comparativo con distintas configuraciones de workers"
+    )
 
     return parser.parse_args()
 
