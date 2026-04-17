@@ -207,8 +207,9 @@ def _ejecutar_workers(
             total=len(futuros),
             desc=f"  ⚙️  Procesando {etiqueta}",
             unit="worker",
-            ncols=70,
+            ncols=100,
             colour="green",
+            bar_format="{desc}  {bar}  {n_fmt}/{total_fmt}  {percentage:3.0f}%  [{elapsed}]",
         )
 
         for futuro in barra:
