@@ -6,33 +6,118 @@ Desarrollado en Python con `concurrent.futures`, soporta dos modos de ejecución
 
 ---
 
-## Requisitos
+## Inicio rápido
 
-- Python 3.8 o superior
-- Dependencias listadas en `requirements.txt`
+¿Quieres tener el proyecto corriendo en tu máquina en minutos? Ejecuta estos 5 comandos:
+
+```bash
+git clone https://github.com/paladinfranco/data_processor.git
+cd data_processor
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python generate_data.py && python main.py
+```
 
 ---
 
-## Instalación
+## Prerrequisitos
+
+Antes de instalar, verifica que tienes las herramientas necesarias:
 
 ```bash
-# 1. Clona o descarga el proyecto
-cd ~/data_processor
+python3 --version   # Necesitas 3.8 o superior
+git --version       # Cualquier versión reciente
+```
 
-# 2. Crea y activa el entorno virtual
+Si no tienes Python: https://python.org/downloads
+Si no tienes Git: https://git-scm.com/downloads
+
+---
+
+## Instalación completa paso a paso
+
+### Paso 1 — Clonar el repositorio
+
+```bash
+# Navega al directorio donde quieres guardar el proyecto
+cd ~
+
+# Clona el repositorio completo con todo el historial
+git clone https://github.com/paladinfranco/data_processor.git
+
+# Entra a la carpeta del proyecto
+cd data_processor
+```
+
+Esto descarga todo el código, el README, el `.gitignore` y el historial completo de commits.
+
+### Paso 2 — Crear y activar el entorno virtual
+
+El entorno virtual aísla las dependencias del proyecto para que no afecten otros proyectos de tu máquina.
+
+```bash
+# Crear entorno virtual
 python3 -m venv venv
-source venv/bin/activate        # Linux / Mac
-venv\Scripts\activate           # Windows
 
-# 3. Instala las dependencias
+# Activar en Linux / Mac
+source venv/bin/activate
+
+# Activar en Windows
+venv\Scripts\activate
+```
+
+Sabrás que está activo cuando veas el prefijo `(venv)` en tu terminal:
+
+```
+(venv) ~/data_processor$
+```
+
+### Paso 3 — Instalar dependencias
+
+```bash
 pip install -r requirements.txt
+```
+
+Esto instala automáticamente pandas, openpyxl, numpy y tqdm en las versiones exactas del proyecto.
+
+### Paso 4 — Generar datos de prueba
+
+Los archivos de datos no se incluyen en el repositorio por su tamaño. Genera tus propios datos de prueba con el script incluido:
+
+```bash
+# Genera 100,000 registros (recomendado para empezar)
+python generate_data.py
+
+# O genera más registros para probar a mayor escala
+python generate_data.py --registros 500000
+python generate_data.py --registros 1000000
+```
+
+El archivo se guarda automáticamente en la carpeta `data/`.
+
+### Paso 5 — Ejecutar el proyecto
+
+```bash
+# Modo interactivo (recomendado para primera vez)
+python main.py
+```
+
+Si todo está correcto verás:
+
+```
+╔══════════════════════════════════════════════════════╗
+║          Data Processor — CSV / XLSX v1.0            ║
+║     Procesamiento concurrente con múltiples hilos    ║
+╚══════════════════════════════════════════════════════╝
+
+✅ Archivo cargado exitosamente: 100,000 registros | 8 columnas
+🚀 Iniciando procesamiento con 4 hilos ...
+📊 Resultado: 30,080 registros encontrados de 100,000 procesados
 ```
 
 ---
 
 ## Uso
-
-El script soporta dos modos de ejecución:
 
 ### Modo interactivo (recomendado)
 
@@ -136,15 +221,15 @@ Los archivos se guardan automáticamente en la carpeta `data/` con nombre descri
 
 ### Distribución de datos generados
 
-| Campo    | Descripción                                                      |
-|----------|------------------------------------------------------------------|
-| cedula   | Cédulas sintéticas únicas secuenciales                          |
-| login    | Usuarios únicos (user0000001, user0000002, ...)                 |
-| telefono | Números celulares (09X) y fijos (0X) ecuatorianos               |
-| ciudad   | 21 ciudades reales del Ecuador                                  |
-| direccion| Calles reales de cada ciudad con numeración                     |
-| estado   | 75% activo, 25% inactivo                                        |
-| saldo    | 30% en cero, 40% entre 1-100, 30% entre 101-9,999.99           |
+| Campo     | Descripción                                                      |
+|-----------|------------------------------------------------------------------|
+| cedula    | Cédulas sintéticas únicas secuenciales                          |
+| login     | Usuarios únicos (user0000001, user0000002, ...)                 |
+| telefono  | Números celulares (09X) y fijos (0X) ecuatorianos               |
+| ciudad    | 21 ciudades reales del Ecuador                                  |
+| direccion | Calles reales de cada ciudad con numeración                     |
+| estado    | 75% activo, 25% inactivo                                        |
+| saldo     | 30% en cero, 40% entre 1-100, 30% entre 101-9,999.99           |
 
 ---
 
@@ -259,6 +344,8 @@ logs/ejecucion_20260416_213155.log
 | openpyxl   | 3.1.2    | Motor de lectura para archivos `.xlsx`       |
 | numpy      | 1.26.4   | Operaciones numéricas de soporte             |
 | tqdm       | 4.66.4   | Barra de progreso en consola                 |
+
+---
 
 ## Autor
 
