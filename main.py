@@ -257,6 +257,10 @@ def _ejecutar(config: dict) -> None:
     # 5. Exportación opcional
     if config["exportar"]:
         exportar_csv(resultado, config["campo"], config["operador"], config["valor"])
+    elif not resultado.empty:
+        exportar_entrada = input("💾 ¿Deseas exportar los resultados a CSV? (s/n) [default: n]: ").strip().lower()
+        if exportar_entrada in {"s", "si", "sí", "y", "yes"}:
+            exportar_csv(resultado, config["campo"], config["operador"], config["valor"])
 
     # 6. Benchmark opcional
     if config["benchmark"]:
