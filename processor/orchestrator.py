@@ -8,7 +8,6 @@ Soporta dos modos de ejecución:
 """
 
 import os
-import numpy as np
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 from tqdm import tqdm
@@ -100,12 +99,12 @@ def _validar_hilos(n_hilos: int, modo: str) -> int:
     Returns:
         Número de workers validado y ajustado.
     """
-    cpus         = os.cpu_count() or 1
+    cpus          = os.cpu_count() or 1
     multiplicador = (
         MULTIPLICADOR_HILOS if modo == "hilos" else MULTIPLICADOR_PROCESOS
     )
-    maximo       = cpus * multiplicador
-    tipo         = "hilos" if modo == "hilos" else "procesos"
+    maximo = cpus * multiplicador
+    tipo   = "hilos" if modo == "hilos" else "procesos"
 
     if n_hilos < MIN_WORKERS:
         logger.warning(
@@ -125,14 +124,33 @@ def _validar_hilos(n_hilos: int, modo: str) -> int:
 
     return n_hilos
 
+
 # ── División de carga ─────────────────────────────────────────────────────────
 
 def _dividir_carga(df: pd.DataFrame, n_hilos: int) -> list[pd.DataFrame]:
     """
-    Divide el DataFrame en N chunks equitativos usando numpy.array_split.
-    Maneja divisiones no exactas sin pérdida de registros.
+    Divide el DataFrame en N chunks equitativos usando indexación nativa
+    de pandas (iloc). El último chunk absorbe el residuo de divisiones
+    no exactas, garantizando cero pérdida de registros.
+
+    A diferencia de numpy.array_split, este enfoque opera directamente
+    sobre pandas sin dependencias externas ni FutureWarnings.
+
+    Args:
+        df:      DataFrame completo.
+        n_hilos: Número de chunks a generar.
+
+    Returns:
+        Lista de DataFrames (chunks).
     """
-    chunks = np.array_split(df, n_hilos)
+    tamanio_chunk = len(df) // n_hilos
+
+    chunks = [
+        df.iloc[i * tamanio_chunk : (i + 1) * tamanio_chunk]
+        if i < n_hilos - 1
+        else df.iloc[i * tamanio_chunk :]
+        for i in range(n_hilos)
+    ]
 
     logger.info(f"📦 Distribución de carga ({len(df):,} registros en {n_hilos} worker(s)):")
     for i, chunk in enumerate(chunks, start=1):
@@ -172,12 +190,10 @@ def _ejecutar_workers(
     Returns:
         Lista de DataFrames resultado de cada worker.
     """
-    # Selecciona el executor según el modo
     ExecutorClass = ThreadPoolExecutor if modo == "hilos" else ProcessPoolExecutor
-
-    etiqueta    = "hilos" if modo == "hilos" else "procesos"
+    etiqueta      = "hilos" if modo == "hilos" else "procesos"
     resultados: list[pd.DataFrame] = []
-    futuros     = {}
+    futuros: dict = {}
 
     with ExecutorClass(max_workers=n_hilos) as executor:
         for i, chunk in enumerate(chunks, start=1):
@@ -186,7 +202,6 @@ def _ejecutar_workers(
             )
             futuros[futuro] = i
 
-        # Barra de progreso sobre los futures completados
         barra = tqdm(
             as_completed(futuros),
             total=len(futuros),
